@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # experiment
-    parser.add_argument('--exp-path', type=str, default='/exp',
+    parser.add_argument('--exp-path', type=str, default='./exp',
                         help='Path to experiments')
     parser.add_argument('--train', action="store_true",
                         help='Run `train` function, get /train folder')

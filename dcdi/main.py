@@ -24,6 +24,9 @@ import cdt
 import torch
 import numpy as np
 
+# import sys
+# sys.path.append('./dcdi')
+
 from .models.learnables import LearnableModel_NonLinGaussANM
 from .models.flows import DeepSigmoidalFlowModel
 from .train import train, retrain, compute_loss
@@ -52,7 +55,7 @@ def main(opt, metrics_callback=_print_metrics, plotting_callback=None):
         assert opt.lr_schedule is None, "--lr-reinit and --lr-schedule are mutually exclusive"
 
     # Dump hyperparameters to disk
-    dump(opt.__dict__, opt.exp_path, 'opt')
+    dump(opt.__dict__, opt.exp_path, 'opt', True)
 
     # Initialize metric logger if needed
     if metrics_callback is None:
