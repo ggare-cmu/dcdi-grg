@@ -143,7 +143,7 @@ class BaseModel(nn.Module):
                     assert mask is not None, 'Mask is not set!'
                     assert regime is not None, 'Regime is not set!'
 
-                    regime = torch.from_numpy(regime)
+                    # regime = torch.from_numpy(regime)
                     R = mask
 
                     if self.intervention_knowledge == "unknown":

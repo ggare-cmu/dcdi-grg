@@ -121,6 +121,9 @@ class DataManagerFile(object):
 
         self.initialize_interv_matrix()
 
+        #Bug-Fix GRG:
+        self.regimes = torch.as_tensor(self.regimes)
+
 
     def load_data(self):
         """
@@ -167,7 +170,8 @@ class DataManagerFile(object):
         to compare learned target to the ground truth
         """
         if self.intervention:
-            interv_matrix = np.zeros((self.dataset.shape[1], self.num_regimes))
+            # interv_matrix = np.zeros((self.dataset.shape[1], self.num_regimes))
+            interv_matrix = torch.zeros((self.dataset.shape[1], self.num_regimes))
 
             regimes = np.sort(np.unique(self.regimes))
             for i, regime in enumerate(regimes):

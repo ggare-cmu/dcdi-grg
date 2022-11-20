@@ -17,13 +17,15 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-import cdt
+
 import os
 import time
 import copy
 import numpy as np
 import torch
 from cdt.utils.R import RPackages, launch_R_script
+
+import causal.utils_graph as utils_graph
 
 from .dag_optim import compute_dag_constraint, is_acyclic
 from .prox import monkey_patch_RMSprop
@@ -246,9 +248,9 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
             if opt.intervention_knowledge == "unknown":
                 gumbel_interv = model.gumbel_interv_w.get_proba().detach().cpu().numpy()
                 np.save(os.path.join(save_path, "gumbel_interv"), gumbel_interv)
-                np.save(os.path.join(save_path, "gt_interv"), gt_interv)
-                plot_interv_w(gumbel_interv, gt_interv, opt.exp_path)
-                plot_interv_w(model.gumbel_interv_w.get_proba().detach().cpu().numpy(), gt_interv, opt.exp_path)
+                np.save(os.path.join(save_path, "gt_interv"), gt_interv.cpu().numpy())
+                plot_interv_w(gumbel_interv, gt_interv.cpu().numpy(), opt.exp_path)
+                plot_interv_w(model.gumbel_interv_w.get_proba().detach().cpu().numpy(), gt_interv.cpu().numpy(), opt.exp_path)
 
             plot_learning_curves(not_nlls, aug_lagrangians, aug_lagrangian_ma[:iter], aug_lagrangians_val, nlls,
                                  nlls_val, opt.exp_path, first_stop=first_stop,
@@ -375,9 +377,9 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     with torch.no_grad():
                         gumbel_interv = model.gumbel_interv_w.get_proba().detach().cpu().numpy()
                         gb_binary = (gumbel_interv < 0.5) * 1.
-                        diff = np.sum(np.abs(gt_interv - gb_binary))
-                        tp = np.sum((gt_interv == gb_binary) & (gb_binary == 1))
-                        fp = np.sum((gt_interv != gb_binary) & (gb_binary == 1))
+                        diff = np.sum(np.abs(gt_interv.cpu().numpy() - gb_binary))
+                        tp = np.sum((gt_interv.cpu().numpy() == gb_binary) & (gb_binary == 1))
+                        fp = np.sum((gt_interv.cpu().numpy() != gb_binary) & (gb_binary == 1))
                         dump(f"diff: {diff}, tp: {tp}, fp:{fp}", save_path, 'regime_learned', True)
 
                 # Save
@@ -407,11 +409,15 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                                             mus=mus, gammas=gammas,
                                             first_stop=first_stop)
                 plot_adjacency(model.adjacency.detach().cpu().numpy(), gt_adjacency, save_path)
+
+                #Save adjacency matrix
+                utils_graph.drawAdjGraph(model.adjacency.detach().cpu().numpy(), dataset_path = opt.data_path, i_dataset = opt.i_dataset, graph_path = os.path.join(save_path, f"Discovered_DAG.png"))
+
                 if opt.intervention_knowledge == "unknown":
                     gumbel_interv = model.gumbel_interv_w.get_proba().detach().cpu().numpy()
                     np.save(os.path.join(save_path, "gumbel_interv"), gumbel_interv)
-                    np.save(os.path.join(save_path, "gt_interv"), gt_interv)
-                    plot_interv_w(gumbel_interv, gt_interv, opt.exp_path)
+                    np.save(os.path.join(save_path, "gt_interv"), gt_interv.cpu().numpy())
+                    plot_interv_w(gumbel_interv, gt_interv.cpu().numpy(), opt.exp_path)
 
                 plot_learning_curves(not_nlls, aug_lagrangians, aug_lagrangian_ma[:iter], aug_lagrangians_val, nlls,
                                      nlls_val, save_path, first_stop=first_stop)
@@ -442,9 +448,11 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                 # Compute SHD and SID metrics
                 pred_adj_ = model.adjacency.detach().cpu().numpy()
                 train_adj_ = train_data.adjacency.detach().cpu().numpy()
-                sid = float(cdt.metrics.SID(target=train_adj_, pred=pred_adj_))
+                #GRG-Temp Fix: Commented out as R packages not installed
+                # sid = float(cdt.metrics.SID(target=train_adj_, pred=pred_adj_))
+                sid = -1
                 shd = float(shd_metric(pred_adj_, train_adj_))
-                shd_cpdag = float(cdt.metrics.SHD_CPDAG(target=train_adj_, pred=pred_adj_))
+                # shd_cpdag = float(cdt.metrics.SHD_CPDAG(target=train_adj_, pred=pred_adj_))
                 fn, fp, rev = edge_errors(pred_adj_, train_adj_)
                 del train_adj_, pred_adj_
 
