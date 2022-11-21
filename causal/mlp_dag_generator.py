@@ -653,7 +653,7 @@ if __name__ == "__main__":
     #Set seed to improve reproducibility 
     zero.improve_reproducibility(seed)
 
-    results_path = "./data_mlp_gen/trail-1"
+    results_path = "./data_mlp_gen/trial-2"
     utils.createDirIfDoesntExists(results_path)
 
     hyperparams = {

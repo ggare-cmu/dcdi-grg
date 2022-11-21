@@ -370,5 +370,90 @@
                 "--lr", "1e-3", //"1e-3",
             ]
         },
+
+        
+        // Synthetic MLP Graph based DAG experiments
+
+        
+        {
+            "name": "Python: [mlp-dag] Obs-Inter-data",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--exp-path", "./exp/data_mlp_gen_trial-1",
+                "--data-path", "/home/grg/Research/dcdi-grg/data_mlp_gen/trial-1",
+                "--train",
+                "--i-dataset", "1-data_mlp_gen_trial-1", //"1",
+                "--num-vars", "5", //"42",
+                "--intervention",
+                // "--dcd", //"Use DCD (DCDI with a loss not taking into account the intervention)"
+                "--intervention-type", "perfect", //"imperfect", //"perfect",
+                "--intervention-knowledge", "known", //"unknown", //"known",
+                "--coeff-interv-sparsity", "1e-8", //"1e-8",
+                "--plot-freq", "1000", //"100",
+                "--gpu",
+                "--float",
+                "--model", "DCDI-DSF", //"DCDI-G", //"DCDI-DSF",
+                "--lr", "1e-3", //"1e-3",
+            ]
+        },
+        
+        {
+            "name": "Python: [mlp-dag] Obs-Inter-data (imperfect)",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--exp-path", "./exp/data_mlp_gen_trial-1_imperfect",
+                "--data-path", "/home/grg/Research/dcdi-grg/data_mlp_gen/trial-1",
+                "--train",
+                "--i-dataset", "1-data_mlp_gen_trial-1", //"1",
+                "--num-vars", "5", //"42",
+                "--intervention",
+                // "--dcd", //"Use DCD (DCDI with a loss not taking into account the intervention)"
+                "--intervention-type", "imperfect", //"imperfect", //"perfect",
+                "--intervention-knowledge", "known", //"unknown", //"known",
+                "--coeff-interv-sparsity", "1e-8", //"1e-8",
+                "--plot-freq", "1000", //"100",
+                "--gpu",
+                "--float",
+                "--model", "DCDI-DSF", //"DCDI-G", //"DCDI-DSF",
+                "--lr", "1e-3", //"1e-3",
+            ]
+        },,
+        
+        {
+            "name": "Python: [mlp-dag] Obs-Inter-data (unknown)",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--exp-path", "./exp/data_mlp_gen_trial-1_unknown",
+                "--data-path", "/home/grg/Research/dcdi-grg/data_mlp_gen/trial-1",
+                "--train",
+                "--i-dataset", "1-data_mlp_gen_trial-1", //"1",
+                "--num-vars", "5", //"42",
+                "--intervention",
+                // "--dcd", //"Use DCD (DCDI with a loss not taking into account the intervention)"
+                "--intervention-type", "perfect", //"imperfect", //"perfect",
+                "--intervention-knowledge", "unknown", //"unknown", //"known",
+                "--coeff-interv-sparsity", "1e-8", //"1e-8",
+                "--plot-freq", "1000", //"100",
+                "--gpu",
+                "--float",
+                "--model", "DCDI-DSF", //"DCDI-G", //"DCDI-DSF",
+                "--lr", "1e-3", //"1e-3",
+            ]
+        },
     ]
 }
