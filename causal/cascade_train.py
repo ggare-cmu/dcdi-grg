@@ -40,6 +40,28 @@ class CustomDataset(Dataset):
         return filename, input, target
 
 
+class MLPselector(nn.Module):
+
+    def __init__(self, in_features, out_classes):
+        super(MLPselector, self).__init__()
+
+        self.input_selector = torch.nn.parameter.Parameter(torch.ones(in_features), requires_grad = True)
+
+
+        self.model = nn.Sequential(
+                    nn.Linear(in_features, 64),
+                    nn.ReLU(),
+                    nn.Linear(64, 64),
+                    nn.ReLU(),
+                    nn.Linear(64, out_classes)
+                )
+
+    def forward(self, inputs):
+
+        inpputs_sparse = self.input_selector*inputs
+        out = self.model(inpputs_sparse)
+
+        return out
 
 
 def fitCustomMLP(feat_train, target_train, feat_test, target_test,
@@ -77,13 +99,15 @@ def fitCustomMLP(feat_train, target_train, feat_test, target_test,
         # criterion = nn.MSELoss()
 
     
-    model = nn.Sequential(
-                nn.Linear(in_features, 64),
-                nn.ReLU(),
-                nn.Linear(64, 64),
-                nn.ReLU(),
-                nn.Linear(64, out_classes)
-            )
+    # model = nn.Sequential(
+    #             nn.Linear(in_features, 64),
+    #             nn.ReLU(),
+    #             nn.Linear(64, 64),
+    #             nn.ReLU(),
+    #             nn.Linear(64, out_classes)
+    #         )
+
+    model = MLPselector(in_features, out_classes)
 
     optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3)
 
@@ -96,6 +120,10 @@ def fitCustomMLP(feat_train, target_train, feat_test, target_test,
 
     print(f"\n [MLP] Train acc = {train_acc} \n")
 
+    # if l1_regularize:
+    #     # model = sparsifyMLP(model)
+    #     # model = sparsifyMLPinputSelector(model)
+
     #Test the model
     target_test, test_acc = test(model, test_dataloader, criterion,
                          return_features = False, return_prob_preds=True)
@@ -103,6 +131,55 @@ def fitCustomMLP(feat_train, target_train, feat_test, target_test,
     print(f"\n [MLP] Test acc = {test_acc} \n")
 
     return model, test_acc, (torch.sigmoid(torch.tensor(target_test)) > 0.5), target_test
+
+
+
+
+#Pruning model weights Ref: https://pytorch.org/tutorials/intermediate/pruning_tutorial.html
+def sparsifyMLPinputSelector(model):
+
+    param = model.input_selector
+
+    with torch.no_grad():
+        tmp_param = param.detach().clone()
+        tmp_abs_param = tmp_param.abs()
+        m_param = tmp_abs_param.mean()
+        s_param = tmp_abs_param.std()
+
+        # tmp_param[tmp_abs_param < m_param - 0.5 * s_param] = 0
+        tmp_param[tmp_abs_param < m_param - 0.53 * s_param] = 0
+
+        param.data.copy_(tmp_param)
+
+
+    return model
+
+
+
+def sparsifyMLP(model):
+
+    # for name, param in model.named_parameters():
+    for name, param in model[0].named_parameters():
+
+        # if "weight" in name:
+        if "weight" in name:
+            
+            # if "classifier" in name:
+            #     print(f"Skipping sparsification of - {name}")
+            #     continue
+
+            tmp_param = param.detach()
+            tmp_abs_param = tmp_param.abs()
+            m_param = tmp_abs_param.mean(dim=1)
+            s_param = tmp_abs_param.std(dim=1)
+
+            for t, tab, m, s in zip(tmp_param, tmp_abs_param, m_param, s_param):
+                t[tab < m] = 0
+                # t[tab < m + s] = 0
+
+            param.data.copy_(tmp_param)
+
+    return model
 
 
 
@@ -144,16 +221,20 @@ def train(model, train_dataloader, optimizer, criterion,
                 # l1_loss = sum(p.abs().sum() for p in model.parameters())
                 # l1_loss = sum(p.abs().sum() for p in model.parameters() if p.requires_grad)
 
-                l1_loss = [p.abs().mean() for p in model.parameters() if p.requires_grad]
-                l1_loss = sum(l1_loss)/len(l1_loss)
+                # l1_loss = [p.abs().mean() for p in model.parameters() if p.requires_grad]
+                # l1_loss = [p.abs().mean() for p in model[0].parameters() if p.requires_grad]
+                # l1_loss = sum(l1_loss)/len(l1_loss)
+
+                l1_loss = model.input_selector.abs().mean()
 
                 # loss += (l1_loss*0.1)
                 # loss += (l1_loss*0.07)
                 # loss += (l1_loss*0.01)
 
-                loss = loss + l1_loss
+                # loss = loss + l1_loss
                 # loss = loss + 0.7*l1_loss
                 # loss = loss + 1.25*l1_loss
+                loss = loss + 2*l1_loss
 
             loss.backward()
 

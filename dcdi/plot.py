@@ -94,6 +94,9 @@ def plot_weighted_adjacency(weighted_adjacency, gt_adjacency, exp_path, name="ab
     fig.savefig(os.path.join(exp_path, name + '.png'))
     fig.clf()
 
+    #GRG
+    plt.close(fig)
+
 
 def plot_adjacency(adjacency, gt_adjacency, exp_path, name=''):
     """
@@ -123,6 +126,9 @@ def plot_adjacency(adjacency, gt_adjacency, exp_path, name=''):
 
     plt.savefig(os.path.join(exp_path, 'adjacency' + name + '.png'))
 
+    #GRG
+    plt.close()
+
 
 def plot_interv_w(interv_w, gt_interv, exp_path, name=''):
     """
@@ -151,6 +157,9 @@ def plot_interv_w(interv_w, gt_interv, exp_path, name=''):
     ax3.set_aspect('equal', adjustable='box')
 
     plt.savefig(os.path.join(exp_path, 'interv_w' + name + '.png'))
+    
+    #GRG
+    plt.close()
 
 
 def plot_learning_curves(not_nlls, aug_lagrangians, aug_lagrangians_ma,
@@ -184,6 +193,9 @@ def plot_learning_curves(not_nlls, aug_lagrangians, aug_lagrangians_ma,
     fig.tight_layout()
     fig.savefig(os.path.join(exp_path, 'learning-curves.png'), bbox_inches="tight", padding=0)
     fig.clf()
+
+    #GRG
+    plt.close(fig)
 
 
 def get_joint_density(model_, x, node, parent, mask, intervention, intervention_type,
@@ -295,6 +307,9 @@ def plot_density(model, opt, gt_adj, data, mask, node, parent, exp_path, step,
     plt.gcf().set_size_inches(w=6, h=6)
     plt.savefig(os.path.join(exp_path, "density_%s_x%d_given_x%d.step%d.log%s.png" % (name, node, parent, step, str(log_probas))), dpi=400)
 
+    #GRG
+    plt.close()
+
 
 def plot_learned_density(model, opt, gt_adj, data, mask, exp_path, step, resolution=256, show_data=True,
                          log_probas=True, cmap=None, scatter_color="black", intervention=None,
@@ -347,3 +362,7 @@ def plot_learning_curves_retrain(losses, losses_val, nlls, nlls_val, exp_path):
     fig.tight_layout()
     fig.savefig(os.path.join(exp_path, 'learning-curves.png'), bbox_inches="tight", padding=0)
     fig.clf()
+
+    #GRG
+    plt.close(fig)
+

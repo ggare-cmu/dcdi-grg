@@ -31,6 +31,7 @@ class FlowModel(BaseModel):
         :param regime: np.ndarray, shape=(batch_size,)
         :return: (batch_size, num_vars) log-likelihoods
         """
+        #GRG
         density_params = self.forward_given_params(x, weights, biases, mask, regime)
         return self._log_likelihood(x, density_params)
 

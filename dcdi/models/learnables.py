@@ -56,6 +56,7 @@ class LearnableModel(BaseModel):
         :param regime: np.ndarray, shape=(batch_size,)
         :return: (batch_size, num_vars) log-likelihoods
         """
+        #GRG
         density_params = self.forward_given_params(x, weights, biases, mask, regime)
 
 
@@ -100,6 +101,11 @@ class LearnableModel_NonLinGaussANM(LearnableModel):
             self.extra_params.append(nn.Parameter(torch.tensor(np.log(extra_param).reshape(1)).type(torch.Tensor)))
 
     def get_distribution(self, dp):
+        '''
+        GRG-Note:
+        torch.distributions.normal.Normal(loc, scale, validate_args=None)[SOURCE]
+            Creates a normal (also called Gaussian) distribution parameterized by loc and scale.
+        '''
         return torch.distributions.normal.Normal(dp[0], dp[1])
 
     def transform_extra_params(self, extra_params):

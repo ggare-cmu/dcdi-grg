@@ -95,7 +95,13 @@ class GumbelAdjacency(torch.nn.Module):
         return torch.sigmoid(self.log_alpha)
 
     def reset_parameters(self):
-        torch.nn.init.constant_(self.log_alpha, 5)
+        '''
+        Note-GRG:
+        Tensor torch::nn::init::constant_(Tensor tensor, Scalar value)
+            Fills the given tensor with the provided value in-place, and returns it. 
+            When x = 5; sigmoid(x=5) = 1 (nearly one) so basically resetting the adj_matrix to all ones!
+        '''
+        torch.nn.init.constant_(self.log_alpha, 5) 
 
 
 class GumbelIntervWeight(torch.nn.Module):

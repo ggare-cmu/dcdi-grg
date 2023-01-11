@@ -69,8 +69,8 @@ class BaseModel(nn.Module):
             self.intervention_knowledge = "known"
 
         # initialize current adjacency matrix
-        self.adjacency = torch.ones((self.num_vars, self.num_vars)) - torch.eye(self.num_vars)
-        self.gumbel_adjacency = GumbelAdjacency(self.num_vars)
+        self.adjacency = torch.ones((self.num_vars, self.num_vars)) - torch.eye(self.num_vars) #GRG - used as weights/conditionals
+        self.gumbel_adjacency = GumbelAdjacency(self.num_vars) #GRG - actually used for training
 
         if self.intervention_knowledge == 'unknown' and self.intervention:
             self.gumbel_interv_w = GumbelIntervWeight(self.num_vars, self.num_regimes)
@@ -188,7 +188,7 @@ class BaseModel(nn.Module):
 
     def get_w_adj(self):
         """Get weighted adjacency matrix"""
-        return self.gumbel_adjacency.get_proba() * self.adjacency
+        return self.gumbel_adjacency.get_proba() * self.adjacency #Note-GRG: This is where they are applying the adjacency as weights/conditions on the gumbel_adj 
 
     def reset_params(self):
         with torch.no_grad():

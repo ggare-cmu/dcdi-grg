@@ -471,7 +471,7 @@ def drawGraph(adjacency_matrix, adj_labels, dag_path):
 
 
 
-def get_obs_inter_split(data, vars_list, class_list):
+def get_obs_inter_split(data, data_split_type, vars_list, class_list):
     
     cls_start_dix = len(vars_list)
 
@@ -524,20 +524,44 @@ def get_obs_inter_split(data, vars_list, class_list):
 
     print(f"dtype of data = {data.dtype}, obs_data = {obs_data.dtype}, inter_data = {inter_data.dtype}")
 
+    if data_split_type == "obs_plus_interv":
+        obs_data = data
+    elif data_split_type == "obs_interv":
+        pass
+    else:
+        raise Exception(f"Error! Unsupported data_split_type = {data_split_type}")
+
     return obs_data, inter_data, intervened_vars
 
 
 
+def saveDataInDCIDFormat(data_obs, data_split_type, adj_matrix, variables, classes, feature_type, results_dir):
 
-def saveDataInDCIDFormat(data_obs, adj_matrix, variables, classes, feature_type, results_dir):
-
-
-    train_obs, train_inter, train_intervened_vars = get_obs_inter_split(data_obs, variables, classes)
+    results_dir = os.path.join(results_dir, data_split_type)
+    utils.createDirIfDoesntExists(results_dir)
 
     trial = results_dir.split('/')[1] + "_" + results_dir.split('/')[-1]
 
     # data_path = os.path.join(results_dir, "train_data.npz")
+    # data_path = os.path.join(results_dir, f"{trial}_{data_split_type}.npz")
     data_path = os.path.join(results_dir, f"{trial}.npz")
+
+
+    if data_split_type == "obs":
+        
+        # Save data for ENCO
+        np.savez(data_path, data_obs = data_obs, data_int = [], adj_matrix = adj_matrix, 
+            vars_list = variables, class_list = classes, feature_type = feature_type, intervened_vars = [])
+
+        # Save data for DCDI
+        np.save(f"{results_dir}/data1-{trial}.npy", data_obs)
+
+        np.save(f"{results_dir}/DAG1-{trial}.npy", adj_matrix)
+
+        return
+
+
+    train_obs, train_inter, train_intervened_vars = get_obs_inter_split(data_obs, data_split_type, variables, classes)
 
     ## Save data for ENCO
     # np.savez(data_path, data_obs = data_obs, data_int = data_int, adj_matrix = adj_matrix, 
@@ -582,7 +606,7 @@ def saveDataInDCIDFormat(data_obs, adj_matrix, variables, classes, feature_type,
     assert dcdi_train_obs_interv.shape == ((len(train_intervened_vars)*train_inter.shape[1])  + train_obs.shape[0], train_obs.shape[1]), "Error! Size incorrect."
     assert adj_matrix.shape == (dcdi_train_obs_interv.shape[1], dcdi_train_obs_interv.shape[1]), "Error! Size incorrect."
 
-
+    
     np.save(f"{results_dir}/data_interv1-{trial}.npy", dcdi_train_obs_interv)
 
     np.save(f"{results_dir}/DAG1-{trial}.npy", adj_matrix)
@@ -737,7 +761,9 @@ if __name__ == "__main__":
 
     #Save data in DCDI format
 
-    saveDataInDCIDFormat(data_obs, adj_matrix = non_latent_adjacency_matrix, 
+    data_split_type = "obs_interv" #"obs_plus_interv" #"obs_plus_interv" #"obs_interv" #obs
+
+    saveDataInDCIDFormat(data_obs, data_split_type, adj_matrix = non_latent_adjacency_matrix, 
             variables = features_list, classes = labels_list, 
             feature_type = feature_type, results_dir = results_path)
 
