@@ -4,7 +4,7 @@ import torch
 
 import os
 
-import zero
+import delu
 
 import utils
 
@@ -317,7 +317,7 @@ def main(class_parents, class_parents_idx, seed,
     ):
 
     #Set seed to improve reproducibility 
-    zero.improve_reproducibility(seed)
+    delu.improve_reproducibility(seed)
 
 
     max_iter = 200 #200

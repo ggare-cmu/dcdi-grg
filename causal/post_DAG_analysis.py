@@ -5,7 +5,7 @@ import os
 import networkx as nx
 import pandas as pd
 
-import zero 
+import delu 
 
 import sys
 sys.path.append("./")
@@ -94,7 +94,7 @@ def getClassCausalParents(node_parents, class_names, features_list, ignore_laten
 if __name__ == "__main__":
 
     seed = 42
-    zero.improve_reproducibility(seed)
+    delu.improve_reproducibility(seed)
 
     interv_type = ""
     # interv_type = "_imperfect"

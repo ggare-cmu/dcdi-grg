@@ -7,7 +7,7 @@ import torch
 from torch import nn
 import numpy as np
 
-import zero 
+import delu 
 
 
 import sys
@@ -675,7 +675,7 @@ if __name__ == "__main__":
     seed = 46 #46 #42
 
     #Set seed to improve reproducibility 
-    zero.improve_reproducibility(seed)
+    delu.improve_reproducibility(seed)
 
     results_path = "./data_mlp_gen/trial-2"
     utils.createDirIfDoesntExists(results_path)

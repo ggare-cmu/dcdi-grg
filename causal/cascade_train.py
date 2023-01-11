@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 
 import tqdm
 
-import zero
+import delu
 
 import sys
 sys.path.append("./code")
@@ -70,7 +70,7 @@ def fitCustomMLP(feat_train, target_train, feat_test, target_test,
         train_epochs = 200, batch_size=256, seed = 42):
 
     #Set seed to improve reproducibility 
-    zero.improve_reproducibility(seed)
+    delu.improve_reproducibility(seed)
 
 
     in_features = feat_train.shape[1]

@@ -25,7 +25,7 @@ import torch
 import numpy as np
 
 #Used to set random seed 
-import zero
+import delu
 
 import utils
 
@@ -55,7 +55,7 @@ def main(opt, metrics_callback=_print_metrics, plotting_callback=None):
     # Control as much randomness as possible
     # torch.manual_seed(opt.random_seed)
     # np.random.seed(opt.random_seed)
-    zero.improve_reproducibility(opt.random_seed)
+    delu.improve_reproducibility(opt.random_seed)
 
     if opt.lr_reinit is not None:
         assert opt.lr_schedule is None, "--lr-reinit and --lr-schedule are mutually exclusive"

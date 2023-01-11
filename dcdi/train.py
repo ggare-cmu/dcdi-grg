@@ -470,6 +470,132 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
 
                 return model
 
+
+    ##GRG - code after training iter ends - note this implies it did not converge 
+    
+    print(f"[GRG-Warning] Method did not converge! Saving results as end of iterations.")
+    
+    # End of training
+    timing = time.time() - time0
+
+    if second_stop == 0:
+        print(f"Second stop at {iter}")
+        second_stop = iter
+
+    # compute nll on train and validation set
+    weights, biases, extra_params = model.get_parameters(mode="wbx")
+    x, mask, regime = train_data.sample(train_data.num_samples)
+    # Since we do not have a DAG yet, this is not really a negative log likelihood.
+    nll_train = compute_loss(x, mask, regime, model, weights, biases,
+                                extra_params, opt.intervention,
+                                opt.intervention_type,
+                                opt.intervention_knowledge)
+
+    x, mask, regime = test_data.sample(test_data.num_samples)
+    nll_val = compute_loss(x, mask, regime, model, weights, biases,
+                            extra_params, opt.intervention,
+                            opt.intervention_type,
+                            opt.intervention_knowledge)
+
+    if opt.intervention_knowledge == "unknown":
+        with torch.no_grad():
+            gumbel_interv = model.gumbel_interv_w.get_proba().detach().cpu().numpy()
+            gb_binary = (gumbel_interv < 0.5) * 1.
+            diff = np.sum(np.abs(gt_interv.cpu().numpy() - gb_binary))
+            tp = np.sum((gt_interv.cpu().numpy() == gb_binary) & (gb_binary == 1))
+            fp = np.sum((gt_interv.cpu().numpy() != gb_binary) & (gb_binary == 1))
+            dump(f"diff: {diff}, tp: {tp}, fp:{fp}", save_path, 'regime_learned', True)
+
+    # Save
+    if not opt.no_w_adjs_log:
+        w_adjs = w_adjs[:iter]
+    dump(model, save_path, 'model')
+    dump(opt.__dict__, save_path, 'opt')
+    if opt.num_vars <= 50 and not opt.no_w_adjs_log:
+        dump(w_adjs, save_path, 'w_adjs')
+    dump(nll_train, save_path, 'pseudo-nll-train')
+    dump(nll_val, save_path, 'pseudo-nll-val')
+    dump(nlls, save_path, 'nlls')
+    dump(nlls_val, save_path, 'nlls-val')
+    dump(not_nlls, save_path, 'not-nlls')
+    dump(aug_lagrangians, save_path, 'aug-lagrangians')
+    dump(aug_lagrangian_ma[:iter], save_path, 'aug-lagrangian-ma')
+    dump(aug_lagrangians_val, save_path, 'aug-lagrangians-val')
+    dump(grad_norms, save_path, 'grad-norms')
+    dump(grad_norm_ma[:iter], save_path, 'grad-norm-ma')
+    dump(timing, save_path, 'timing')
+    np.save(os.path.join(save_path, "DAG"), model.adjacency.detach().cpu().numpy())
+
+    # plot
+    if not opt.no_w_adjs_log:
+        plot_weighted_adjacency(w_adjs, gt_adjacency, save_path,
+                                name="w_adj_{}".format(w_adj_mode),
+                                mus=mus, gammas=gammas,
+                                first_stop=first_stop)
+    plot_adjacency(model.adjacency.detach().cpu().numpy(), gt_adjacency, save_path)
+
+    #Save adjacency matrix
+    utils_graph.drawAdjGraph(model.adjacency.detach().cpu().numpy(), dataset_path = opt.data_path, i_dataset = opt.i_dataset, graph_path = os.path.join(save_path, f"Discovered_DAG.png"))
+
+    if opt.intervention_knowledge == "unknown":
+        gumbel_interv = model.gumbel_interv_w.get_proba().detach().cpu().numpy()
+        np.save(os.path.join(save_path, "gumbel_interv"), gumbel_interv)
+        np.save(os.path.join(save_path, "gt_interv"), gt_interv.cpu().numpy())
+        plot_interv_w(gumbel_interv, gt_interv.cpu().numpy(), opt.exp_path)
+
+    plot_learning_curves(not_nlls, aug_lagrangians, aug_lagrangian_ma[:iter], aug_lagrangians_val, nlls,
+                            nlls_val, save_path, first_stop=first_stop)
+
+    if opt.plot_density:
+        x, mask, regime = train_data.sample(3000)
+        plot_data = x[mask.sum(dim=-1) == mask.shape[1]]
+        plot_learned_density(model, opt, gt_adjacency, plot_data,
+                                opt.exp_path, step=iter, resolution=256,
+                                show_data=True, log_probas=True, cmap=None, scatter_color="white",
+                                intervention=opt.intervention,
+                                intervention_type=opt.intervention_type,
+                                intervention_knowledge=opt.intervention_knowledge)
+        del plot_data
+
+
+    # save results
+    model.eval()
+    _, mask, regime = train_data.sample(train_data.num_samples)
+
+    # evaluate on validation set
+    x, mask, regime = test_data.sample(test_data.num_samples)
+    weights, biases, extra_params = model.get_parameters(mode="wbx")
+    nll_val = compute_loss(x, mask, regime, model, weights, biases, extra_params,
+                            opt.intervention, opt.intervention_type,
+                            opt.intervention_knowledge).item()
+
+    # Compute SHD and SID metrics
+    pred_adj_ = model.adjacency.detach().cpu().numpy()
+    train_adj_ = train_data.adjacency.detach().cpu().numpy()
+    #GRG-Temp Fix: Commented out as R packages not installed
+    # sid = float(cdt.metrics.SID(target=train_adj_, pred=pred_adj_))
+    sid = -1
+    shd = float(shd_metric(pred_adj_, train_adj_))
+    # shd_cpdag = float(cdt.metrics.SHD_CPDAG(target=train_adj_, pred=pred_adj_))
+    fn, fp, rev = edge_errors(pred_adj_, train_adj_)
+    del train_adj_, pred_adj_
+
+    # Save results
+    results = f"shd: {shd},\nsid: {sid},\nfn: {fn},\nfp: {fp},\nrev: {rev},\nnll_val:{best_nll_val}"
+    dump(results, save_path, 'results', True)
+    metrics_callback(stage="final", step=iter,
+                        metrics={"shd": shd,
+                                "sid": sid,
+                                "fn": fn,
+                                "fp": fp,
+                                "rev": rev,
+                                "nll_val": best_nll_val
+                                })
+
+    return model
+
+
+
 def retrain(model, train_data, test_data, dag_folder, opt, metrics_callback, plotting_callback):
     """
     Retrain a model which is already DAG
