@@ -355,6 +355,9 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                 #GRG: adding to save GPU OOM error
                 with torch.no_grad():
 
+                    #GRG
+                    Compute_LogLike = False
+                    
                     # End of training
                     timing = time.time() - time0
 
@@ -368,16 +371,18 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     weights, biases, extra_params = model.get_parameters(mode="wbx")
                     x, mask, regime = train_data.sample(train_data.num_samples)
                     # Since we do not have a DAG yet, this is not really a negative log likelihood.
-                    nll_train = compute_loss(x, mask, regime, model, weights, biases,
+                    if Compute_LogLike:
+                        nll_train = compute_loss(x, mask, regime, model, weights, biases,
+                                                extra_params, opt.intervention,
+                                                opt.intervention_type,
+                                                opt.intervention_knowledge)
+
+                    x, mask, regime = test_data.sample(test_data.num_samples)
+                    if Compute_LogLike:
+                        nll_val = compute_loss(x, mask, regime, model, weights, biases,
                                             extra_params, opt.intervention,
                                             opt.intervention_type,
                                             opt.intervention_knowledge)
-
-                    x, mask, regime = test_data.sample(test_data.num_samples)
-                    nll_val = compute_loss(x, mask, regime, model, weights, biases,
-                                        extra_params, opt.intervention,
-                                        opt.intervention_type,
-                                        opt.intervention_knowledge)
 
                     if opt.intervention_knowledge == "unknown":
                         with torch.no_grad():
@@ -395,8 +400,8 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     dump(opt.__dict__, save_path, 'opt')
                     if opt.num_vars <= 50 and not opt.no_w_adjs_log:
                         dump(w_adjs, save_path, 'w_adjs')
-                    dump(nll_train, save_path, 'pseudo-nll-train')
-                    dump(nll_val, save_path, 'pseudo-nll-val')
+                    dump(nll_train, save_path, 'pseudo-nll-train') if Compute_LogLike else None
+                    dump(nll_val, save_path, 'pseudo-nll-val')if Compute_LogLike else None
                     dump(nlls, save_path, 'nlls')
                     dump(nlls_val, save_path, 'nlls-val')
                     dump(not_nlls, save_path, 'not-nlls')
@@ -447,9 +452,10 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     # evaluate on validation set
                     x, mask, regime = test_data.sample(test_data.num_samples)
                     weights, biases, extra_params = model.get_parameters(mode="wbx")
-                    nll_val = compute_loss(x, mask, regime, model, weights, biases, extra_params,
-                                        opt.intervention, opt.intervention_type,
-                                        opt.intervention_knowledge).item()
+                    if Compute_LogLike:
+                        nll_val = compute_loss(x, mask, regime, model, weights, biases, extra_params,
+                                            opt.intervention, opt.intervention_type,
+                                            opt.intervention_knowledge).item()
 
                     # Compute SHD and SID metrics
                     pred_adj_ = model.adjacency.detach().cpu().numpy()
@@ -471,7 +477,7 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                                             "fn": fn,
                                             "fp": fp,
                                             "rev": rev,
-                                            "nll_val": best_nll_val
+                                            "nll_val": best_nll_val if Compute_LogLike else -1
                                             })
 
                     return model
@@ -484,6 +490,9 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                 
     #GRG: adding to save GPU OOM error
     with torch.no_grad():
+
+        #GRG
+        Compute_LogLike = False
     
         # End of training
         timing = time.time() - time0
@@ -496,16 +505,18 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
         weights, biases, extra_params = model.get_parameters(mode="wbx")
         x, mask, regime = train_data.sample(train_data.num_samples)
         # Since we do not have a DAG yet, this is not really a negative log likelihood.
-        nll_train = compute_loss(x, mask, regime, model, weights, biases,
+        if Compute_LogLike:
+            nll_train = compute_loss(x, mask, regime, model, weights, biases,
+                                        extra_params, opt.intervention,
+                                        opt.intervention_type,
+                                        opt.intervention_knowledge)
+
+        x, mask, regime = test_data.sample(test_data.num_samples)
+        if Compute_LogLike:
+            nll_val = compute_loss(x, mask, regime, model, weights, biases,
                                     extra_params, opt.intervention,
                                     opt.intervention_type,
                                     opt.intervention_knowledge)
-
-        x, mask, regime = test_data.sample(test_data.num_samples)
-        nll_val = compute_loss(x, mask, regime, model, weights, biases,
-                                extra_params, opt.intervention,
-                                opt.intervention_type,
-                                opt.intervention_knowledge)
 
         if opt.intervention_knowledge == "unknown":
             with torch.no_grad():
@@ -523,8 +534,8 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
         dump(opt.__dict__, save_path, 'opt')
         if opt.num_vars <= 50 and not opt.no_w_adjs_log:
             dump(w_adjs, save_path, 'w_adjs')
-        dump(nll_train, save_path, 'pseudo-nll-train')
-        dump(nll_val, save_path, 'pseudo-nll-val')
+        dump(nll_train, save_path, 'pseudo-nll-train') if Compute_LogLike else None
+        dump(nll_val, save_path, 'pseudo-nll-val') if Compute_LogLike else None
         dump(nlls, save_path, 'nlls')
         dump(nlls_val, save_path, 'nlls-val')
         dump(not_nlls, save_path, 'not-nlls')
@@ -575,9 +586,10 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
         # evaluate on validation set
         x, mask, regime = test_data.sample(test_data.num_samples)
         weights, biases, extra_params = model.get_parameters(mode="wbx")
-        nll_val = compute_loss(x, mask, regime, model, weights, biases, extra_params,
-                                opt.intervention, opt.intervention_type,
-                                opt.intervention_knowledge).item()
+        if Compute_LogLike:
+            nll_val = compute_loss(x, mask, regime, model, weights, biases, extra_params,
+                                    opt.intervention, opt.intervention_type,
+                                    opt.intervention_knowledge).item()
 
         # Compute SHD and SID metrics
         pred_adj_ = model.adjacency.detach().cpu().numpy()
@@ -599,7 +611,7 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                                     "fn": fn,
                                     "fp": fp,
                                     "rev": rev,
-                                    "nll_val": best_nll_val
+                                    "nll_val": best_nll_val if Compute_LogLike else -1
                                     })
 
         return model
