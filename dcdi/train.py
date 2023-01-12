@@ -358,6 +358,8 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     print(f"Second stop at {iter}")
                     second_stop = iter
 
+                print(f"[GRG] Method converged! Saving results.")
+                
                 # compute nll on train and validation set
                 weights, biases, extra_params = model.get_parameters(mode="wbx")
                 x, mask, regime = train_data.sample(train_data.num_samples)
