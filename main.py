@@ -113,7 +113,7 @@ if __name__ == "__main__":
     parser.add_argument('--omega-gamma', type=float, default=1e-4,
                         help='Precision to declare convergence of subproblems')
     parser.add_argument('--omega-mu', type=float, default=0.9,
-                        help='After subproblem solved, h should have reduced by this ratio')
+                        help='After subproblem solved, h should have reduced by this ratio') #GRG-Note: Imp hyper-param as per ENCO paper
     parser.add_argument('--mu-init', type=float, default=1e-8,
                         help='initial value of mu')
     parser.add_argument('--mu-mult-factor', type=float, default=2,
