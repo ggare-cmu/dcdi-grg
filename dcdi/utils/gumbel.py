@@ -4,6 +4,7 @@ def sample_logistic(shape, uniform):
     u = uniform.sample(shape)
     return torch.log(u) - torch.log(1 - u)
 
+#Note-GRG: bs - batch size
 def gumbel_sigmoid(log_alpha, uniform, bs, tau=1, hard=False):
     shape = tuple([bs] + list(log_alpha.size()))
     logistic_noise = sample_logistic(shape, uniform)

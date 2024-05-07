@@ -124,7 +124,7 @@ class BaseModel(nn.Module):
         :param regime: np.ndarray, shape=(batch_size,)
         :return: batch_size x num_vars * num_params, the parameters of each variable conditional
         """
-        bs = x.size(0)
+        bs = x.size(0) #GRG - batch size
         num_zero_weights = 0
 
         for layer in range(self.num_layers + 1):
@@ -134,7 +134,8 @@ class BaseModel(nn.Module):
                 M = self.gumbel_adjacency(bs)
                 adj = self.adjacency.unsqueeze(0)
 
-                if not self.intervention:
+                if not self.intervention: 
+                    #Note-GRG: 'l' here is the first dim of adj which is one. 
                     x = torch.einsum("tij,bjt,ljt,bj->bti", weights[layer], M, adj, x) + biases[layer]
                 elif self.intervention_type == "perfect" and self.intervention_knowledge == "known":
                     # the mask is not applied here, it is applied in the loss term

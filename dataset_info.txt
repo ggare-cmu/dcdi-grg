@@ -1,13 +1,13 @@
 
-regime - denotes the intervention set with 0 for observation and >0 for interventions; 
+regime - denotes the intervention set with 0 for observation and >0 for interventions; [file name f"regime{self.i_dataset}.csv"]
          It is a list of datasest-id repeated for every data sample in that dataset;
          Example - consider observation data with 10 samples, intervention-set1 with 10 samples, intervention-set2 with 10 samples
          Regime will be [0]*10 [1]*10 [2]*10 - in reverse order
 
 
-mask_intervention - denotes the intervened variable i.e. intervention targets; 
+mask_intervention - denotes the intervened variable i.e. intervention targets; [file name f"intervention{self.i_dataset}.csv"]
          It is a list of intervention targets repeated for every data sample in that intervention-dataset;
          Example - consider observation data with 10 samples, intervention-set1 (target=2) with 10 samples, intervention-set2 (target=1) with 10 samples
-         Regime will be _ [2]*10 [1]*10 - in reverse order
+         Mask will be [ ]*10 [2]*10 [1]*10 - in reverse order
          
 intervention mask id var start from index 0 
