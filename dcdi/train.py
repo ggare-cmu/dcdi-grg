@@ -61,6 +61,16 @@ def compute_loss(x, mask, regime, model, weights, biases, extra_params, interven
         return loss, torch.sqrt(torch.var(joint_log_likelihood) / joint_log_likelihood.size(0))
 
 
+'''
+Note-GRG: We train MLPs (per variable) to predict the parameters of the Flow model that models the PDF of the variable. 
+            The input to the MLP is the parents of the variable and the output is the parameters of the Flow model.
+        
+        # During training, we sample the adjacency matrix from a Gumbel distribution and use it as weights/conditions on the 
+
+        During training, we sample the data randomly from both observational and interventional data randomly.
+        The model weights are not rest during training!
+        The MLPs are trained to optimize the log-likelihood of seeing the data i.e. making the likelihood of the data ideally 1.
+'''
 def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_callback, plotting_callback):
     """
     Applying augmented Lagrangian to solve the continuous constrained problem.
