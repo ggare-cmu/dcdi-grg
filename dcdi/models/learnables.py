@@ -81,6 +81,7 @@ class LearnableModel(BaseModel):
         raise NotImplementedError
 
 
+#Note-GRG: Nonlinear Gaussian Additive Noise models
 class LearnableModel_NonLinGaussANM(LearnableModel):
     def __init__(self, num_vars, num_layers, hid_dim, nonlin="leaky-relu",
                  intervention=False,

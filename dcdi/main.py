@@ -121,6 +121,7 @@ def main(opt, metrics_callback=_print_metrics, plotting_callback=None):
 
     # create learning model and ground truth model
     if opt.model == "DCDI-G":
+        #Note-GRG: Nonlinear Gaussian Additive Noise models
         model = LearnableModel_NonLinGaussANM(opt.num_vars,
                                               opt.num_layers,
                                               opt.hid_dim,
