@@ -85,6 +85,7 @@ class BaseFlow(torch.nn.Module):
         return super(BaseFlow, self).cuda()
 
 
+#Note-GRG: Original source code - https://github.com/CW-Huang/torchkit/blob/master/torchkit/flows.py
 class SigmoidFlow(BaseFlow):
     """
     Layer used to build Deep sigmoidal flows
@@ -100,15 +101,25 @@ class SigmoidFlow(BaseFlow):
         super(SigmoidFlow, self).__init__()
         self.num_ds_dim = num_ds_dim
 
+    #Note-GRG: act_a implies the activation function for 'a'
     def act_a(self, x):
         return softplus(x)
 
+    #Note-GRG: act_b implies the activation function for 'b'
     def act_b(self, x):
         return x
 
+    #Note-GRG: act_w implies the activation function for 'w'
     def act_w(self, x):
         return softmax(x, dim=2)
 
+    '''
+    #Note-GRG: forward function is the forward pass of the flow model
+        x is the input, logdet is the log determinant of the Jacobian, dsparams are the parameters of the flow model 
+        and mollify is the mollification parameter, delta is the delta parameter
+        output y_t = σ^−1( wT · σ( a · x_t + b )), where σ is the sigmoid function and w, a, b are the parameters of the flow model 
+                            and σ^-1 is the inverse of sigmoid function i.e. logit function
+    '''
     def forward(self, x, logdet, dsparams, mollify=0.0, delta=delta):
         ndim = self.num_ds_dim
         # Apply activation functions to the parameters produced by the hypernetwork
@@ -119,12 +130,12 @@ class SigmoidFlow(BaseFlow):
         a = a_ * (1 - mollify) + 1.0 * mollify
         b = b_ * (1 - mollify) + 0.0 * mollify
 
-        pre_sigm = a * x[:, :, None] + b  # C
+        pre_sigm = a * x[:, :, None] + b  # C #Note-GRG: C & D refers to the supplemental pg12 of Neural Autoregressive Flows paper https://arxiv.org/abs/1804.00779 
         sigm = torch.sigmoid(pre_sigm)
         x_pre = torch.sum(w * sigm, dim=2)  # D
         x_pre_clipped = x_pre * (1 - delta) + delta * 0.5
-        x_ = log(x_pre_clipped) - log(1 - x_pre_clipped)  # Logit function (so H)
-        xnew = x_
+        x_ = log(x_pre_clipped) - log(1 - x_pre_clipped)  # Logit function (so H) #Note-GRG: H = logit(x) = log(x/(1-x)); logit func is the inverse of sigmoid func 
+        xnew = x_ #Note-GRG: xnew = σ^−1( wT · σ( a · x + b ))
 
         logj = F.log_softmax(dsparams[:, :, 2 * ndim: 3 * ndim], dim=2) + \
                logsigmoid(pre_sigm) + \

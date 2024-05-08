@@ -119,6 +119,7 @@ class DeepSigmoidalFlowModel(FlowModel):
         density_params = torch.cat((conditional, shared), -1).view(conditional.shape[0], conditional.shape[1], -1)
         assert density_params.shape[2] == self.flow_n_params_per_var
 
+        #Note-GRG deva's: logdet could represent L2 in the latent space
         logdet = Variable(torch.zeros((x.shape[0], self.num_vars)))
         h = x.view(x.size(0), -1)
         for i in range(self.flow_n_layers):
@@ -129,7 +130,7 @@ class DeepSigmoidalFlowModel(FlowModel):
         assert x.shape[0] == h.shape[0]
         assert x.shape[1] == h.shape[1]
         zeros = Variable(torch.zeros(x.shape[0], self.num_vars))
-        # Not the joint NLL until we have a DAG
+        # Not the joint NLL until we have a DAG #Note-GRG: need to understand this - why not hoint NLL until we have a DAG?
         pseudo_joint_nll = - log_normal(h, zeros, zeros + 1.0) - logdet
 
         # We return the log product (averaged) of conditionals instead of the logp for each conditional.
