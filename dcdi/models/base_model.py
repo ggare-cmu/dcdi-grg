@@ -25,6 +25,11 @@ import torch.nn.functional as F
 from ..dag_optim import GumbelAdjacency, GumbelIntervWeight
 
 
+'''
+Note-GRG: We train MLPs (per variable) to predict the parameters of the Flow model that models the PDF of the variable. 
+            The input to the MLP is the parents of the variable and the output is the parameters of the Flow model.
+            
+'''
 class BaseModel(nn.Module):
     def __init__(self, num_vars, num_layers, hid_dim, num_params, nonlin="leaky-relu",
                  intervention=False, intervention_type="perfect",

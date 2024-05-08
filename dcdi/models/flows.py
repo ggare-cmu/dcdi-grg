@@ -130,8 +130,20 @@ class DeepSigmoidalFlowModel(FlowModel):
         assert x.shape[0] == h.shape[0]
         assert x.shape[1] == h.shape[1]
         zeros = Variable(torch.zeros(x.shape[0], self.num_vars))
+        '''
+        Note-GRG:
+            In the expression: pseudo_joint_nll = - log_normal(h, zeros, zeros + 1.0) - logdet
+            'h' is the latent space representation of the data i.e. the encoded data using the flow model
+            so log_normal(h, zeros, zeros + 1.0) is the log-likelihood of the data in the simple gaussian latent space, with mean = 0 and var = 1 (or log_var = 1? [potential bug])
+                - so this gives us the (log-)likelihood of the data in the latent space
+            logdet is the log determinant of the Jacobian of the transformation from the input space to the latent space 
+                - this is the multiplier/scaling factor for the likelihood from the latent space to the input space
+                Thus multiplying the likelihood in the latent space with the scaling factor gives us the likelihood in the input space (pseudo_joint_nll)
+                as - log(normal_likelihood) - log(det) = -log(det*normal_likelihood) = -log(input_space_likelihood) [i.e. NLL in the input space]
+            pseudo_joint_nll is the negative log-likelihood of the data in the latent space
+        '''
         # Not the joint NLL until we have a DAG #Note-GRG: need to understand this - why not hoint NLL until we have a DAG?
-        pseudo_joint_nll = - log_normal(h, zeros, zeros + 1.0) - logdet
+        pseudo_joint_nll = - log_normal(h, zeros, zeros + 1.0) - logdet #Note-GRG: here mean is zero and log-variance is one #Bug-Fix GRG: should the variance be 1.0 or log-var be 1.0?
 
         # We return the log product (averaged) of conditionals instead of the logp for each conditional.
         #      Shape is (batch x 1) instead of (batch x n_vars).
