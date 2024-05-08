@@ -70,6 +70,10 @@ Note-GRG: We train MLPs (per variable) to predict the parameters of the Flow mod
         During training, we sample the data randomly from both observational and interventional data randomly.
         The model weights are not rest during training!
         The MLPs are trained to optimize the log-likelihood of seeing the data i.e. making the likelihood of the data ideally 1.
+
+        The stopping/convergence criteria are based on the constraint violation being below a set threshold and the acyclicity of the learned graph i.e. the graph is acyclic aka DAG.
+        -- #TODO-GRG: We may want to relax the acyclicity constraint to allow for some cycles in the graph. This can be done by setting a threshold on the number of cycles allowed in the graph, maybe?
+        
 '''
 def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_callback, plotting_callback):
     """
