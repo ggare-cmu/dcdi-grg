@@ -15,7 +15,32 @@ c = - 0.5 * np.log(2 * np.pi)
 def log(x):
     return torch.log(x * 1e2) - np.log(1e2)
 
+'''
+Note-GRG: log_normal function is the log likelihood of the normal distribution
+            normal distribution is given by:
+            p(x;μ,σ)=1σ2π​exp(−(x−μ)2/(2σ2))
 
+            log_normal(x, mean, log_var, eps=0.00001) = - (x - mean) ** 2 / (2. * torch.exp(log_var) + eps) - log_var / 2. + c
+            where c = - 0.5 * np.log(2 * np.pi)
+            The log likelihood of the normal distribution is given by:
+            log p(x;μ,σ) = − (x−μ)2/(2σ2)− log(σ)− 1/2 log(2π)
+            p(x;μ,σ)=1σ2π​exp(−2σ2(log(x)−μ)2)
+            log p(x;μ,σ)=−(x−μ)2/(2σ2)−log(σ)−1/2log(2π)
+
+            Normal distribution is a continuous probability distribution for a real-valued random variable.
+            The normal distribution is a probability function that describes how the values of a variable are distributed.
+            It is the most important probability distribution in statistics because of its simplicity in application and because it describes many natural phenomena.
+            The normal distribution is completely determined by two parameters: the mean and the standard deviation.
+            The mean determines the center of the graph of the normal distribution, and the standard deviation determines the height and width of the graph.
+            The normal distribution is defined by the following probability density function, where μ is the mean and σ is the standard deviation.
+            pdf of normal distribution = f(x;μ,σ)=1/{σ (2π)^0.5} * ​exp(−0.5*(x−μ)^2/σ^2))
+
+
+            Here:
+            c = log(1/√(2π)) = - 0.5 * np.log(2 * np.pi)
+            - log_var/2 = -log(σ^2)/2 = -log(σ)
+            torch.exp(log_var) = σ^2
+'''
 def log_normal(x, mean, log_var, eps=0.00001):
     return - (x - mean) ** 2 / (2. * torch.exp(log_var) + eps) - log_var / 2. + c
 
