@@ -427,7 +427,7 @@
                 "--model", "DCDI-DSF", //"DCDI-G", //"DCDI-DSF",
                 "--lr", "1e-3", //"1e-3",
             ]
-        },,
+        },
         
         {
             "name": "Python: [mlp-dag] Obs-Inter-data (unknown)",
@@ -453,6 +453,30 @@
                 "--float",
                 "--model", "DCDI-DSF", //"DCDI-G", //"DCDI-DSF",
                 "--lr", "1e-3", //"1e-3",
+            ]
+        },
+
+        {
+            "name": "Python: Demo",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+
+                "--train", 
+                "--data-path", "./data/perfect/data_p10_e10_n10000_linear_perfect",
+                "--num-vars", "10",
+                "--i-dataset", "1", 
+                // "--exp-path", "exp",
+                "--exp-path", "exp/dcdi/linear_perfect_known", 
+                "--model", "DCDI-DSF", 
+                "--intervention", 
+                "--intervention-type", "perfect", 
+                "--intervention-knowledge", "known", 
+                "--reg-coeff", "0.5"
             ]
         },
     ]
