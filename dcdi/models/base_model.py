@@ -139,6 +139,10 @@ class BaseModel(nn.Module):
                 adj = self.adjacency.unsqueeze(0)
 
                 if not self.intervention: 
+                    '''
+                    out_org = torch.einsum("tij,bjt,ljt,bj->bti", weights[layer], M, adj, x)
+                    torch.equal(out_org, torch.matmul(weights[layer], (M * adj * x.unsqueeze(-1)).T).permute(2,0,1))
+                    '''
                     #Note-GRG: 'l' here is the first dim of adj which is one. 
                     x = torch.einsum("tij,bjt,ljt,bj->bti", weights[layer], M, adj, x) + biases[layer]
                 elif self.intervention_type == "perfect" and self.intervention_knowledge == "known":

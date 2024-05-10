@@ -75,12 +75,13 @@ class DeepSigmoidalFlowModel(FlowModel):
         # Flow model initialization
         self.flow_n_layers = flow_n_layers
         self.flow_hid_dim = flow_hid_dim
-        self.flow_n_params_per_var = flow_hid_dim * 3 * flow_n_layers  # total number of params
+        self.flow_n_params_per_var = flow_hid_dim * 3 * flow_n_layers  # total number of params #Note-GRG: same as n_conditioned_params
         self.flow_n_cond_params_per_var = n_conditioned_params  # number of conditional params
         self.flow_n_params_per_layer = flow_hid_dim * 3  # number of params in each flow layer
         self.flow = SigmoidFlow(flow_hid_dim)
 
         # Shared density parameters (i.e, those that are not produced by the conditioner)
+        #Note-GRG: always self.flow_n_params_per_var == self.flow_n_cond_params_per_var == self.flow_hid_dim * 3 * self.flow_n_layers
         self.shared_density_params = torch.nn.Parameter(torch.zeros(self.flow_n_params_per_var -
                                                                     self.flow_n_cond_params_per_var))
 
@@ -107,11 +108,14 @@ class DeepSigmoidalFlowModel(FlowModel):
         assert density_params.shape[1] == self.num_vars
         assert density_params.shape[2] == self.flow_n_cond_params_per_var
 
+        #Note-GRG: The entire inject code using condtional and shared is nonsense as shared_density_params is always empty!
         # Inject shared parameters here
         # Add the shared density parameters in each layer's parameter vectors
         # The shared parameters are different for each layer
         # All batch elements receive the same shared parameters
         conditional = density_params.view(density_params.shape[0], density_params.shape[1], self.flow_n_layers, 3, -1)
+        
+        #Note-GRG: shared_density_params is always empty (None)
         shared = \
             self.shared_density_params.view(self.flow_n_layers, 3, -1)[None, None, :, :, :].repeat(conditional.shape[0],
                                                                                                    conditional.shape[1],

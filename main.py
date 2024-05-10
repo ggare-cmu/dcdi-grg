@@ -26,6 +26,7 @@ import numpy as np
 from dcdi.main import main
 
 
+#Run cmd: python ./main.py --train --data-path ./data/perfect/data_p10_e10_n10000_linear_perfect --num-vars 10 --i-dataset 1 --exp-path exp --model DCDI-DSF --intervention --intervention-type perfect --intervention-knowledge known --reg-coeff 0.5
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
