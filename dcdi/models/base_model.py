@@ -169,6 +169,18 @@ class BaseModel(nn.Module):
                     R = R * regime.unsqueeze(1)
                     R = torch.zeros(R.size(0), self.num_vars, self.num_regimes).scatter_(2, R.unsqueeze(2), 1)
 
+                    '''
+                    Note-GRG: 
+                        Basically whenever we have imperfect or unknown intervention:
+                            - we have a set of MLPs (for every var) for every regime (i.e. every intervention) in addition to observational data
+                            - we select the MLP corresponding to that regime (and variable)
+                        When dealing with perfect and known intervention:
+                            - we have only one set of MLPs (for every var) corresponding to observational data (irrespective of the num of regimes)
+                            - we zero out the loss for the given variable in the sample where it is intervened
+                        When working with only observational data:
+                            - we have only one set of MLPs (for every var) corresponding to observational data
+                            - no loss terms is zero out - i.e. every loss terms is considered 
+                    '''
                     # apply the first MLP layer with the mask M and the
                     # parameters 'selected' by R
                     w = torch.einsum('tijk, btk -> btij', weights[layer], R)

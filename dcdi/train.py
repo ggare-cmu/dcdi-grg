@@ -46,7 +46,7 @@ def compute_loss(x, mask, regime, model, weights, biases, extra_params, interven
     """
     if intervention and intervention_type == "perfect" and intervention_knowledge =="known":
         log_likelihood = model.compute_log_likelihood(x, weights, biases, extra_params)
-        log_likelihood = torch.sum(log_likelihood * mask, dim=0) / mask.size(0)
+        log_likelihood = torch.sum(log_likelihood * mask, dim=0) / mask.size(0) #Note-GRG: For the var that are intervened we zero out the loss term as not to compute loss for them - only in those batch-sample
     else:
         log_likelihood = model.compute_log_likelihood(x, weights, biases,
                                                   extra_params, mask=mask,
