@@ -54,6 +54,8 @@ def compute_loss(x, mask, regime, model, weights, biases, extra_params, interven
         log_likelihood = torch.sum(log_likelihood, dim=0) / mask.size(0)
     loss = - torch.mean(log_likelihood)
 
+    # print(loss, torch.exp(log_likelihood))
+
     if not mean_std:
         return loss
     else:
@@ -312,6 +314,16 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                     optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr_reinit)
 
         else:
+            '''
+            Note-GRG: Once we converge (i.e. First stop) we still contine training to fit to the final adj_matrix 
+                1. We train as long as val loss (aug_lagrangian_val) keeps on decreasing for every 1000 iters
+                2. If the val loss does not decrease for 5 (patience) consecutive 1000 iters, we move to thresholding the final adj_matrix
+                3. We threshold the final adj_matrix by scaling the edges <= 0.5 by -100 and > 0.5 by +100 and the gradient update is disabled
+                        higher = (w_adj > 0.5).type(torch.Tensor)
+                        lower = (w_adj <= 0.5).type(torch.Tensor)
+                        model.gumbel_adjacency.log_alpha.copy_(higher * 100 + lower * -100)
+                4. Again we train till val loss decreases for 5 (patience) consecutive 1000 iters and then stop training
+            '''
             if patience > 0:
                 if iter % 1000 == 0:
                     # compute loss on whole validation set
@@ -432,7 +444,8 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
                         plot_weighted_adjacency(w_adjs, gt_adjacency, save_path,
                                                 name="w_adj_{}".format(w_adj_mode),
                                                 mus=mus, gammas=gammas,
-                                                first_stop=first_stop)
+                                                first_stop=first_stop,
+                                                second_stop=second_stop)
                     plot_adjacency(model.adjacency.detach().cpu().numpy(), gt_adjacency, save_path)
 
                     #Save adjacency matrix
@@ -566,7 +579,8 @@ def train(model, gt_adjacency, gt_interv, train_data, test_data, opt, metrics_ca
             plot_weighted_adjacency(w_adjs, gt_adjacency, save_path,
                                     name="w_adj_{}".format(w_adj_mode),
                                     mus=mus, gammas=gammas,
-                                    first_stop=first_stop)
+                                    first_stop=first_stop,
+                                    second_stop=second_stop)
         plot_adjacency(model.adjacency.detach().cpu().numpy(), gt_adjacency, save_path)
 
         #Save adjacency matrix
